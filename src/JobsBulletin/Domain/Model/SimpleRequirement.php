@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace JobsBulletin\Domain\Model;
 
-class SimpleRequirement implements Requirement
+class SimpleRequirement implements Requirements
 {
     /**
      * @var string
@@ -19,7 +19,7 @@ class SimpleRequirement implements Requirement
     /**
      * @inheritDoc
      */
-    public function isMatched(array $abilities): bool
+    public function areMet(array $abilities): bool
     {
         return in_array($this->condition, $abilities);
     }

@@ -2,6 +2,7 @@
 
 namespace spec\JobsBulletin\Domain\Service;
 
+use JobsBulletin\Domain\Model\Requirements;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
@@ -9,6 +10,21 @@ class OfferRequirementsMatcherSpec extends ObjectBehavior
 {
     private const ABILITY_BIKE = 'a bike';
     private const ABILITY_DRIVING_LICENSE = 'a driving license';
+
+
+    public function it_new_function_returns_true_when_requirements_are_met(
+        Requirements $requirements
+    )
+    {
+        //Given
+        $abilities = [];
+        $requirements->areMet($abilities)->willReturn(true);
+
+        //When
+        $this->isNewMatched($requirements, $abilities)
+        //Then
+            ->shouldReturn(true);
+    }
 
     public function it_returns_true_when_any_requirement_is_not_given()
     {

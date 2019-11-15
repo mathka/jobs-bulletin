@@ -2,7 +2,6 @@
 
 namespace spec\JobsBulletin\Domain\Model;
 
-use JobsBulletin\Domain\Model\SimpleRequirement;
 use PhpSpec\ObjectBehavior;
 
 class SimpleRequirementSpec extends ObjectBehavior
@@ -17,7 +16,7 @@ class SimpleRequirementSpec extends ObjectBehavior
     public function it_returns_true_when_any_ability_meets_condition()
     {
         //When
-        $this->isMatched([self::CONDITION])
+        $this->areMet([self::CONDITION])
         //Then
             ->shouldReturn(true);
     }
@@ -25,7 +24,7 @@ class SimpleRequirementSpec extends ObjectBehavior
     public function it_returns_false_when_any_ability_does_not_meet_condition()
     {
         //When
-        $this->isMatched(['other_ability'])
+        $this->areMet(['other_ability'])
         //Then
             ->shouldReturn(false);
     }

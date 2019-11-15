@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace JobsBulletin\Domain\Service;
 
+use JobsBulletin\Domain\Model\Requirements;
+
 class OfferRequirementsMatcher implements RequirementsMatcher
 {
     public function isMatched(array $abilities, array $requirements): bool
@@ -28,5 +30,11 @@ class OfferRequirementsMatcher implements RequirementsMatcher
             }
         }
         return false;
+    }
+
+    //TODO This class doesn't make sense now ;)
+    public function isNewMatched(Requirements $requirements, array $abilities): bool
+    {
+        return $requirements->areMet($abilities);
     }
 }
