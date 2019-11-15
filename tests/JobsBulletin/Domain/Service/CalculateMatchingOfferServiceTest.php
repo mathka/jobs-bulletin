@@ -6,8 +6,8 @@ namespace tests\JobsBulletin\Domain\Service;
 
 use JobsBulletin\Domain\Model\Offer;
 use JobsBulletin\Domain\Repository\OfferRepository;
-use JobsBulletin\Domain\Repository\RequirementsMatcher;
 use JobsBulletin\Domain\Service\CalculateMatchingOfferService;
+use JobsBulletin\Domain\Service\RequirementsMatcher;
 use PHPUnit\Framework\TestCase;
 
 /**

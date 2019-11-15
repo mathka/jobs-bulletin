@@ -12,8 +12,6 @@ class OfferRequirementsMatcher implements RequirementsMatcher
             return true;
         }
 
-        $requirements
-
         var_dump(
             \array_keys($requirements),
             in_array(['or'], \array_keys($requirements))
