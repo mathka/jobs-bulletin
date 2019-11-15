@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace tests\JobsBulletin\Domain\Service;
 
+use JobsBulletin\Domain\Model\Offer;
+use JobsBulletin\Domain\Repository\OfferRepository;
+use JobsBulletin\Domain\Repository\RequirementsMatcher;
 use JobsBulletin\Domain\Service\CalculateMatchingOfferService;
 use PHPUnit\Framework\TestCase;
 
@@ -12,6 +15,7 @@ use PHPUnit\Framework\TestCase;
  */
 class CalculateMatchingOfferServiceTest extends TestCase
 {
+    private const OFFERS_LIMIT = 10;
     private const ABILITY_BIKE = 'a bike';
     private const ABILITY_DRIVING_LICENSE = 'a driving license';
 
@@ -20,30 +24,64 @@ class CalculateMatchingOfferServiceTest extends TestCase
      */
     private $service;
 
+    /**
+     * @var OfferRepository
+     */
+    private $offerRepository;
+
+    /**
+     * @var RequirementsMatcher
+     */
+    private $requirementsMatcher;
+
     public function setUp()
     {
-        $this->service = new CalculateMatchingOfferService();
+        $this->offerRepository = $this->createOfferRepository();
+        $this->requirementsMatcher = $this->createMock(RequirementsMatcher::class);
+        $this->service = new CalculateMatchingOfferService(
+            $this->offerRepository,
+            $this->requirementsMatcher,
+            self::OFFERS_LIMIT);
     }
 
     public function testCalculateMatchingOffers()
     {
+        //Given
         $ability = [
             self::ABILITY_BIKE,
             self::ABILITY_DRIVING_LICENSE,
         ];
 
-        $result = $this->service->calculate(
-            $this->getSampleCompaniesRequirements(),
-            $ability
-        );
+        $this->requirementsMatcher->method('isMatched')->willReturn(true);
 
-        $this->assertEquals(['Company F', 'Company J'], $result);
+        //When
+        $result = $this->service->calculate($ability);
+
+        //Then
+        $this->assertCount(2, $result);
+        $this->assertEquals('Offer F', $result[0]->getCompanyName());
+        $this->assertEquals('Offer J', $result[1]->getCompanyName());
+    }
+
+    private function createOfferRepository(): OfferRepository
+    {
+        $clientRepository = $this->createMock(OfferRepository::class);
+        $clientRepository->expects($this->at(0))
+            ->method('getOffersRequirements')
+            ->with(self::OFFERS_LIMIT, 0)
+            ->willReturn($this->getSampleCompaniesRequirements());
+        $clientRepository->expects($this->at(1))
+            ->method('getOffersRequirements')
+            ->with(self::OFFERS_LIMIT, self::OFFERS_LIMIT)
+            ->willReturn([]);
+
+        return $clientRepository;
     }
 
     private function getSampleCompaniesRequirements(): array
     {
         return [
-            'Company A' => [
+            new Offer('Company A', [
                 'and' => [
                     [
                         'or' => [
@@ -53,8 +91,8 @@ class CalculateMatchingOfferServiceTest extends TestCase
                     ],
                     'property insurance',
                 ],
-            ],
-            'Company B' => [
+            ]),
+            new Offer('Company B', [
                 'and' => [
                     [
                         'or' => [
@@ -65,21 +103,21 @@ class CalculateMatchingOfferServiceTest extends TestCase
                     self::ABILITY_DRIVING_LICENSE,
                     'car insurance',
                 ],
-            ],
-            'Company C' => [
+            ]),
+            new Offer('Company C', [
                 'and' => [
                     'a social security number',
                     'a work permit',
                 ],
-            ],
-            'Company D' => [
+            ]),
+            new Offer('Company D', [
                 'or' => [
                     'an apartment',
                     'a flat',
                     'a house',
                 ],
-            ],
-            'Company E' => [
+            ]),
+            new Offer('Company E', [
                 'and' => [
                     self::ABILITY_DRIVING_LICENSE,
                     [
@@ -91,8 +129,8 @@ class CalculateMatchingOfferServiceTest extends TestCase
                         ],
                     ],
                 ],
-            ],
-            'Company F' => [
+            ]),
+            new Offer('Company F', [
                 'or' => [
                     'a scooter',
                     self::ABILITY_BIKE,
@@ -104,23 +142,23 @@ class CalculateMatchingOfferServiceTest extends TestCase
                         ],
                     ],
                 ],
-            ],
-            'Company G' => [
+            ]),
+            new Offer('Company G', [
                 'and' => [
                     'a massage qualification certificate',
                     'a liability insurance',
                 ],
-            ],
-            'Company H' => [
+            ]),
+            new Offer('Company H', [
                 'or' => [
                     'a storage place',
                     'a garage',
                 ],
-            ],
-            'Company J' => [],
-            'Company K' => [
+            ]),
+            new Offer('Company J', []),
+            new Offer('Company K', [
                 'a PayPal account',
-            ],
+            ]),
         ];
     }
 }
