@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JobsBulletin\Domain\Model;
+namespace JobsBulletin\Domain\Model\Requirements;
 
 class SimpleRequirement implements Requirements
 {
@@ -17,10 +17,10 @@ class SimpleRequirement implements Requirements
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function areMet(array $abilities): bool
     {
-        return in_array($this->condition, $abilities);
+        return \in_array($this->condition, $abilities);
     }
 }

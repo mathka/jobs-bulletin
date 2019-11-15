@@ -1,6 +1,6 @@
 <?php
 
-namespace spec\JobsBulletin\Domain\Model;
+namespace spec\JobsBulletin\Domain\Model\Requirements;
 
 use PhpSpec\ObjectBehavior;
 
