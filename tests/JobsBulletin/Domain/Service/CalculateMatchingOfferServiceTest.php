@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace tests\JobsBulletin\Domain\Service;
 
 use JobsBulletin\Domain\Model\Offer;
+use JobsBulletin\Domain\Model\Requirements\ConjunctionRequirements;
+use JobsBulletin\Domain\Model\Requirements\DisjunctionRequirements;
+use JobsBulletin\Domain\Model\Requirements\NoRequirements;
+use JobsBulletin\Domain\Model\Requirements\SimpleRequirement;
 use JobsBulletin\Domain\Repository\OfferRepository;
 use JobsBulletin\Domain\Service\CalculateMatchingOfferService;
-use JobsBulletin\Domain\Service\RequirementsMatcher;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,18 +32,11 @@ class CalculateMatchingOfferServiceTest extends TestCase
      */
     private $offerRepository;
 
-    /**
-     * @var RequirementsMatcher
-     */
-    private $requirementsMatcher;
-
     public function setUp()
     {
         $this->offerRepository = $this->createOfferRepository();
-        $this->requirementsMatcher = $this->createMock(RequirementsMatcher::class);
         $this->service = new CalculateMatchingOfferService(
             $this->offerRepository,
-            $this->requirementsMatcher,
             self::OFFERS_LIMIT);
     }
 
@@ -52,113 +48,115 @@ class CalculateMatchingOfferServiceTest extends TestCase
             self::ABILITY_DRIVING_LICENSE,
         ];
 
-        $this->requirementsMatcher->method('isMatched')->willReturn(true);
-
         //When
         $result = $this->service->calculate($ability);
 
         //Then
         $this->assertCount(2, $result);
-        $this->assertEquals('Offer F', $result[0]->getCompanyName());
-        $this->assertEquals('Offer J', $result[1]->getCompanyName());
+        $this->assertEquals('Company F', $result[0]->getCompanyName());
+        $this->assertEquals('Company J', $result[1]->getCompanyName());
     }
 
     private function createOfferRepository(): OfferRepository
     {
-        $clientRepository = $this->createMock(OfferRepository::class);
-        $clientRepository->expects($this->at(0))
-            ->method('getOffersRequirements')
+        $offerRepository = $this->createMock(OfferRepository::class);
+        $offerRepository->expects($this->at(0))
+            ->method('getOffers')
             ->with(self::OFFERS_LIMIT, 0)
-            ->willReturn($this->getSampleCompaniesRequirements());
-        $clientRepository->expects($this->at(1))
-            ->method('getOffersRequirements')
+            ->willReturn($this->getSampleOffersRequirements());
+        $offerRepository->expects($this->at(1))
+            ->method('getOffers')
             ->with(self::OFFERS_LIMIT, self::OFFERS_LIMIT)
             ->willReturn([]);
 
-        return $clientRepository;
+        return $offerRepository;
     }
 
-    private function getSampleCompaniesRequirements(): array
+    private function getSampleOffersRequirements(): array
     {
         return [
-            new Offer('Company A', [
-                'and' => [
-                    [
-                        'or' => [
-                            'an apartment',
-                            'house',
-                        ],
-                    ],
-                    'property insurance',
-                ],
-            ]),
-            new Offer('Company B', [
-                'and' => [
-                    [
-                        'or' => [
-                            '5 door car',
-                            '4 door car',
-                        ],
-                    ],
-                    self::ABILITY_DRIVING_LICENSE,
-                    'car insurance',
-                ],
-            ]),
-            new Offer('Company C', [
-                'and' => [
-                    'a social security number',
-                    'a work permit',
-                ],
-            ]),
-            new Offer('Company D', [
-                'or' => [
-                    'an apartment',
-                    'a flat',
-                    'a house',
-                ],
-            ]),
-            new Offer('Company E', [
-                'and' => [
-                    self::ABILITY_DRIVING_LICENSE,
-                    [
-                        'or' => [
-                            '2 door car',
-                            '3 door car',
-                            '4 door car',
-                            '5 door car',
-                        ],
-                    ],
-                ],
-            ]),
-            new Offer('Company F', [
-                'or' => [
-                    'a scooter',
-                    self::ABILITY_BIKE,
-                    [
-                        'and' => [
-                            'a motorcycle',
-                            self::ABILITY_DRIVING_LICENSE,
-                            'motorcycle insurance',
-                        ],
-                    ],
-                ],
-            ]),
-            new Offer('Company G', [
-                'and' => [
-                    'a massage qualification certificate',
-                    'a liability insurance',
-                ],
-            ]),
-            new Offer('Company H', [
-                'or' => [
-                    'a storage place',
-                    'a garage',
-                ],
-            ]),
-            new Offer('Company J', []),
-            new Offer('Company K', [
-                'a PayPal account',
-            ]),
+            new Offer(
+                'Company A',
+                new ConjunctionRequirements([
+                    new DisjunctionRequirements([
+                        new SimpleRequirement('an apartment'),
+                        new SimpleRequirement('house'),
+                    ]),
+                    new SimpleRequirement('house'),
+                ])
+            ),
+            new Offer(
+                'Company B',
+                new ConjunctionRequirements([
+                    new DisjunctionRequirements([
+                        new SimpleRequirement('5 door car'),
+                        new SimpleRequirement('4 door car'),
+                    ]),
+                    new SimpleRequirement(self::ABILITY_DRIVING_LICENSE),
+                    new SimpleRequirement('car insurance'),
+                ])
+            ),
+            new Offer(
+                'Company C',
+                new ConjunctionRequirements([
+                    new SimpleRequirement('a social security number'),
+                    new SimpleRequirement('a work permit'),
+                ])
+            ),
+            new Offer(
+                'Company D',
+                new DisjunctionRequirements([
+                    new SimpleRequirement('an apartment'),
+                    new SimpleRequirement('a flat'),
+                    new SimpleRequirement('a house'),
+                ])
+            ),
+            new Offer(
+                'Company E',
+                new ConjunctionRequirements([
+                    new SimpleRequirement(self::ABILITY_DRIVING_LICENSE),
+                    new DisjunctionRequirements([
+                        new SimpleRequirement('2 door car'),
+                        new SimpleRequirement('3 door car'),
+                        new SimpleRequirement('4 door car'),
+                        new SimpleRequirement('5 door car'),
+                    ]),
+                ])
+            ),
+            new Offer(
+                'Company F',
+                new DisjunctionRequirements([
+                    new SimpleRequirement('a scooter'),
+                    new SimpleRequirement(self::ABILITY_BIKE),
+                    new ConjunctionRequirements([
+                        new SimpleRequirement('a motorcycle'),
+                        new SimpleRequirement(self::ABILITY_DRIVING_LICENSE),
+                        new SimpleRequirement('motorcycle insurance'),
+                    ]),
+                ])
+            ),
+            new Offer(
+                'Company G',
+                new ConjunctionRequirements([
+                    new SimpleRequirement('a massage qualification certificate'),
+                    new SimpleRequirement('a liability insurance'),
+                ])
+            ),
+            new Offer(
+                'Company H',
+                new DisjunctionRequirements([
+                    new SimpleRequirement('a storage place'),
+                    new SimpleRequirement('a garage'),
+                ])
+            ),
+            new Offer(
+                'Company J',
+                new NoRequirements()
+            ),
+            new Offer(
+                'Company K',
+                new SimpleRequirement('a PayPal account')
+            ),
         ];
     }
 }
