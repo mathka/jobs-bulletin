@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace JobsBulletin\Domain\Model;
 
+use JobsBulletin\Domain\Model\Requirements\Requirements;
+
 class Offer
 {
     /**
@@ -12,17 +14,17 @@ class Offer
     private $companyName;
 
     /**
-     * @var array
+     * @var Requirements
      */
-    private $requirements = [];
+    private $requirements;
 
-    public function __construct(string $companyName, array $requirements)
+    public function __construct(string $companyName, Requirements $requirements)
     {
         $this->companyName = $companyName;
         $this->requirements = $requirements;
     }
 
-    public function getRequirements(): array
+    public function getRequirements(): Requirements
     {
         return $this->requirements;
     }

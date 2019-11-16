@@ -6,5 +6,5 @@ namespace JobsBulletin\Domain\Repository;
 
 interface OfferRepository
 {
-    public function getOffersRequirements(int $limit, int $offset): array;
+    public function getOffers(int $limit, int $offset): array;
 }

@@ -14,22 +14,13 @@ class CalculateMatchingOfferService
     private $offerRepository;
 
     /**
-     * @var RequirementsMatcher
-     */
-    private $requirementsMatcher;
-
-    /**
      * @var int
      */
     private $offerLimit;
 
-    public function __construct(
-        OfferRepository $offerRepository,
-        RequirementsMatcher $requirementsMatcher,
-        int $offerLimit
-    ) {
+    public function __construct(OfferRepository $offerRepository, int $offerLimit)
+    {
         $this->offerRepository = $offerRepository;
-        $this->requirementsMatcher = $requirementsMatcher;
         $this->offerLimit = $offerLimit;
     }
 
@@ -37,22 +28,28 @@ class CalculateMatchingOfferService
     {
         $offers = [];
 
-        foreach ($this->getOffersRequirements() as $offerRequirements) {
-            if ($this->requirementsMatcher->isMatched($abilities, $offerRequirements->getRequirements())) {
-                $offers[] = $offerRequirements;
+        foreach ($this->getOffers() as $offer) {
+            $requirements = $offer->getRequirements();
+            if ($requirements->areMet($abilities)) {
+                $offers[] = $offer;
             }
         }
 
         return $offers;
     }
 
-    private function getOffersRequirements(): \Generator
+    /**
+     * @yield Offer
+     *
+     * @return \Generator
+     */
+    private function getOffers(): \Generator
     {
         $offset = 0;
 
-        while ($offersRequirements = $this->offerRepository->getOffersRequirements($this->offerLimit, $offset)) {
-            foreach ($offersRequirements as $requirement) {
-                yield $requirement;
+        while ($offers = $this->offerRepository->getOffers($this->offerLimit, $offset)) {
+            foreach ($offers as $offer) {
+                yield $offer;
             }
             $offset += $this->offerLimit;
         }
