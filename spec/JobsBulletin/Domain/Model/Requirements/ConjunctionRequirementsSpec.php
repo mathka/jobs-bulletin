@@ -40,7 +40,7 @@ class ConjunctionRequirementsSpec extends ObjectBehavior
         $this->beConstructedWith([
             $firstRequirement,
             $secondRequirement,
-            $thirdRequirement
+            $thirdRequirement,
         ]);
 
         $firstRequirement->areMet(self::ABILITIES)->willReturn(true);

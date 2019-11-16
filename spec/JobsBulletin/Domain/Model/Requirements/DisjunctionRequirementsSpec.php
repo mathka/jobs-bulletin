@@ -40,7 +40,7 @@ class DisjunctionRequirementsSpec extends ObjectBehavior
         $this->beConstructedWith([
             $firstRequirement,
             $secondRequirement,
-            $thirdRequirement
+            $thirdRequirement,
         ]);
 
         $firstRequirement->areMet(self::ABILITIES)->willReturn(false);

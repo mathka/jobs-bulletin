@@ -7,7 +7,7 @@ namespace JobsBulletin\Domain\Model\Requirements;
 class NoRequirements implements Requirements
 {
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function areMet(array $abilities): bool
     {

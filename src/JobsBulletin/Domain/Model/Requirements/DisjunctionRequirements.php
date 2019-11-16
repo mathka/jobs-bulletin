@@ -17,7 +17,7 @@ class DisjunctionRequirements implements Requirements
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function areMet(array $abilities): bool
     {
@@ -26,6 +26,7 @@ class DisjunctionRequirements implements Requirements
                 return true;
             }
         }
+
         return false;
     }
 }
