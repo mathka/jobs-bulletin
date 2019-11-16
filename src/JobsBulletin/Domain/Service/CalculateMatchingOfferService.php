@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JobsBulletin\Domain\Service;
 
+use JobsBulletin\Domain\Model\Offer;
 use JobsBulletin\Domain\Repository\OfferRepository;
 
 class CalculateMatchingOfferService
@@ -24,13 +25,12 @@ class CalculateMatchingOfferService
         $this->offerLimit = $offerLimit;
     }
 
-    public function calculate(array $abilities): array
+    public function calculate(array $abilities, bool $shouldMatching): array
     {
         $offers = [];
 
         foreach ($this->getOffers() as $offer) {
-            $requirements = $offer->getRequirements();
-            if ($requirements->areMet($abilities)) {
+            if ($this->shouldReturnOffer($offer, $abilities, $shouldMatching)) {
                 $offers[] = $offer;
             }
         }
@@ -53,5 +53,13 @@ class CalculateMatchingOfferService
             }
             $offset += $this->offerLimit;
         }
+    }
+
+    private function shouldReturnOffer(Offer $offer, array $abilities, bool $shouldMatching)
+    {
+        $requirements = $offer->getRequirements();
+        $requirementAreMet = $requirements->areMet($abilities);
+
+        return $requirementAreMet == $shouldMatching;
     }
 }

@@ -40,7 +40,7 @@ class CalculateMatchingOfferServiceTest extends TestCase
             self::OFFERS_LIMIT);
     }
 
-    public function testCalculateMatchingOffers()
+    public function testGetMatchingOffers()
     {
         //Given
         $ability = [
@@ -49,12 +49,35 @@ class CalculateMatchingOfferServiceTest extends TestCase
         ];
 
         //When
-        $result = $this->service->calculate($ability);
+        $result = $this->service->calculate($ability, true);
 
         //Then
         $this->assertCount(2, $result);
         $this->assertEquals('Company F', $result[0]->getCompanyName());
         $this->assertEquals('Company J', $result[1]->getCompanyName());
+    }
+
+    public function testGetDoesNotMatchingOffers()
+    {
+        //Given
+        $ability = [
+            self::ABILITY_BIKE,
+            self::ABILITY_DRIVING_LICENSE,
+        ];
+
+        //When
+        $result = $this->service->calculate($ability, false);
+
+        //Then
+        $this->assertCount(8, $result);
+        $this->assertEquals('Company A', $result[0]->getCompanyName());
+        $this->assertEquals('Company B', $result[1]->getCompanyName());
+        $this->assertEquals('Company C', $result[2]->getCompanyName());
+        $this->assertEquals('Company D', $result[3]->getCompanyName());
+        $this->assertEquals('Company E', $result[4]->getCompanyName());
+        $this->assertEquals('Company G', $result[5]->getCompanyName());
+        $this->assertEquals('Company H', $result[6]->getCompanyName());
+        $this->assertEquals('Company K', $result[7]->getCompanyName());
     }
 
     private function createOfferRepository(): OfferRepository
