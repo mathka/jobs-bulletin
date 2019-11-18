@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace tests\JobsBulletin\Domain\Service;
+namespace Tests\JobsBulletin\Domain\Service;
 
 use JobsBulletin\Domain\Model\Offer;
 use JobsBulletin\Domain\Model\Requirements\ConjunctionRequirements;
