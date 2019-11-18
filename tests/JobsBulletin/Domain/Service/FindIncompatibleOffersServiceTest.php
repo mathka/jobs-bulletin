@@ -10,70 +10,43 @@ use JobsBulletin\Domain\Model\Requirements\DisjunctionRequirements;
 use JobsBulletin\Domain\Model\Requirements\NoRequirements;
 use JobsBulletin\Domain\Model\Requirements\SimpleRequirement;
 use JobsBulletin\Domain\Repository\OfferRepository;
-use JobsBulletin\Domain\Service\CalculateMatching\IncompatibleOfferSelectionStrategy;
-use JobsBulletin\Domain\Service\CalculateMatching\MatchingOfferSelectionStrategy;
-use JobsBulletin\Domain\Service\CalculateMatchingOfferService;
+use JobsBulletin\Domain\Service\FindOffers\IncompatibleOfferSelectionStrategy;
+use JobsBulletin\Domain\Service\FindOffersService;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group jobs-bulletin
  */
-class CalculateMatchingOfferServiceTest extends TestCase
+class FindIncompatibleOffersServiceTest extends TestCase
 {
-    private const OFFERS_LIMIT = 10;
-
-    private const ABILITY_BIKE = 'a bike';
-    private const ABILITY_DRIVING_LICENSE = 'a driving license';
-
-    private const ABILITY = [
-        self::ABILITY_BIKE,
-        self::ABILITY_DRIVING_LICENSE,
-    ];
+//    use FindOffers;
 
     /**
-     * @var CalculateMatchingOfferService
+     * @var FindOffersService
      */
     private $service;
 
-    /**
-     * @var OfferRepository
-     */
-    private $offerRepository;
-
     public function setUp()
     {
-        $this->offerRepository = $this->createOfferRepository();
-    }
+        $offersLimit = 10;
 
-    public function testGetMatchingOffers()
-    {
-        //Given
-        $service = new CalculateMatchingOfferService(
-            $this->offerRepository,
-            new MatchingOfferSelectionStrategy(),
-            self::OFFERS_LIMIT
-        );
-
-        //When
-        $result = $service->calculate(self::ABILITY);
-
-        //Then
-        $this->assertCount(2, $result);
-        $this->assertEquals('Company F', $result[0]->getCompanyName());
-        $this->assertEquals('Company J', $result[1]->getCompanyName());
-    }
-
-    public function testGetDoesNotMatchingOffers()
-    {
-        //Given
-        $service = new CalculateMatchingOfferService(
-            $this->offerRepository,
+        $this->service = new FindOffersService(
+            $this->createOfferRepository($offersLimit),
             new IncompatibleOfferSelectionStrategy(),
-            self::OFFERS_LIMIT
+            $offersLimit
         );
+    }
+
+    public function testFindIncompatibleOffers()
+    {
+        //Given
+        $abilities = [
+            'a bike',
+            'a driving license',
+        ];
 
         //When
-        $result = $service->calculate(self::ABILITY);
+        $result = $this->service->calculate($abilities);
 
         //Then
         $this->assertCount(8, $result);
@@ -87,16 +60,16 @@ class CalculateMatchingOfferServiceTest extends TestCase
         $this->assertEquals('Company K', $result[7]->getCompanyName());
     }
 
-    private function createOfferRepository(): OfferRepository
+    private function createOfferRepository(int $offersLimit): OfferRepository
     {
         $offerRepository = $this->createMock(OfferRepository::class);
         $offerRepository->expects($this->at(0))
             ->method('getOffers')
-            ->with(self::OFFERS_LIMIT, 0)
+            ->with($offersLimit, 0)
             ->willReturn($this->getSampleOffersRequirements());
         $offerRepository->expects($this->at(1))
             ->method('getOffers')
-            ->with(self::OFFERS_LIMIT, self::OFFERS_LIMIT)
+            ->with($offersLimit, $offersLimit)
             ->willReturn([]);
 
         return $offerRepository;
@@ -122,7 +95,7 @@ class CalculateMatchingOfferServiceTest extends TestCase
                         new SimpleRequirement('5 door car'),
                         new SimpleRequirement('4 door car'),
                     ]),
-                    new SimpleRequirement(self::ABILITY_DRIVING_LICENSE),
+                    new SimpleRequirement('a driving license'),
                     new SimpleRequirement('car insurance'),
                 ])
             ),
@@ -144,7 +117,7 @@ class CalculateMatchingOfferServiceTest extends TestCase
             new Offer(
                 'Company E',
                 new ConjunctionRequirements([
-                    new SimpleRequirement(self::ABILITY_DRIVING_LICENSE),
+                    new SimpleRequirement('a driving license'),
                     new DisjunctionRequirements([
                         new SimpleRequirement('2 door car'),
                         new SimpleRequirement('3 door car'),
@@ -157,10 +130,10 @@ class CalculateMatchingOfferServiceTest extends TestCase
                 'Company F',
                 new DisjunctionRequirements([
                     new SimpleRequirement('a scooter'),
-                    new SimpleRequirement(self::ABILITY_BIKE),
+                    new SimpleRequirement('a bike'),
                     new ConjunctionRequirements([
                         new SimpleRequirement('a motorcycle'),
-                        new SimpleRequirement(self::ABILITY_DRIVING_LICENSE),
+                        new SimpleRequirement('a driving license'),
                         new SimpleRequirement('motorcycle insurance'),
                     ]),
                 ])

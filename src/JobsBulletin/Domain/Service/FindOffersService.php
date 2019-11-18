@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace JobsBulletin\Domain\Service;
 
 use JobsBulletin\Domain\Repository\OfferRepository;
-use JobsBulletin\Domain\Service\CalculateMatching\OfferSelectionStrategy;
+use JobsBulletin\Domain\Service\FindOffers\OfferSelectionStrategy;
 
-class CalculateMatchingOfferService
+class FindOffersService
 {
     /**
      * @var OfferRepository
@@ -39,9 +39,7 @@ class CalculateMatchingOfferService
         $offers = [];
 
         foreach ($this->getOffers() as $offer) {
-            $requirements = $offer->getRequirements();
-
-            if ($this->selectionStrategy->isSelected($requirements, $abilities)) {
+            if ($this->selectionStrategy->isSelected($offer, $abilities)) {
                 $offers[] = $offer;
             }
         }
