@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace JobsBulletin\Domain\Service;
 
-use JobsBulletin\Domain\Model\Offer;
 use JobsBulletin\Domain\Repository\OfferRepository;
+use JobsBulletin\Domain\Service\FindOffers\OfferSelectionStrategy;
 
-class CalculateMatchingOfferService
+class FindOffersService
 {
     /**
      * @var OfferRepository
@@ -15,22 +15,31 @@ class CalculateMatchingOfferService
     private $offerRepository;
 
     /**
+     * @var OfferSelectionStrategy
+     */
+    private $selectionStrategy;
+
+    /**
      * @var int
      */
     private $offerLimit;
 
-    public function __construct(OfferRepository $offerRepository, int $offerLimit)
-    {
+    public function __construct(
+        OfferRepository $offerRepository,
+        OfferSelectionStrategy $selectionStrategy,
+        int $offerLimit
+    ) {
         $this->offerRepository = $offerRepository;
+        $this->selectionStrategy = $selectionStrategy;
         $this->offerLimit = $offerLimit;
     }
 
-    public function calculate(array $abilities, bool $shouldMatching): array
+    public function calculate(array $abilities): array
     {
         $offers = [];
 
         foreach ($this->getOffers() as $offer) {
-            if ($this->shouldReturnOffer($offer, $abilities, $shouldMatching)) {
+            if ($this->selectionStrategy->isSelected($offer, $abilities)) {
                 $offers[] = $offer;
             }
         }
@@ -53,13 +62,5 @@ class CalculateMatchingOfferService
             }
             $offset += $this->offerLimit;
         }
-    }
-
-    private function shouldReturnOffer(Offer $offer, array $abilities, bool $shouldMatching)
-    {
-        $requirements = $offer->getRequirements();
-        $requirementAreMet = $requirements->areMet($abilities);
-
-        return $requirementAreMet == $shouldMatching;
     }
 }
