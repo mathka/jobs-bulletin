@@ -7,74 +7,51 @@ namespace spec\JobsBulletin\Domain\Service;
 use JobsBulletin\Domain\Model\Offer;
 use JobsBulletin\Domain\Model\Requirements\Requirements;
 use JobsBulletin\Domain\Repository\OfferRepository;
+use JobsBulletin\Domain\Service\CalculateMatching\OfferSelectionStrategy;
 use PhpSpec\ObjectBehavior;
 
 class CalculateMatchingOfferServiceSpec extends ObjectBehavior
 {
     private const OFFERS_LIMIT = 2;
-    private const ABILITIES = [];
-
-    /**
-     * @var Offer
-     */
-    private $offerA;
-
-    /**
-     * @var Offer
-     */
-    private $offerB;
-
-    /**
-     * @var Offer
-     */
-    private $offerC;
 
     public function let(
         OfferRepository $offerRepository,
+        OfferSelectionStrategy $selectionStrategy
+    ) {
+        $this->beConstructedWith(
+            $offerRepository,
+            $selectionStrategy,
+            self::OFFERS_LIMIT
+        );
+    }
+
+    public function it_returns_matched_offers(
+        OfferRepository $offerRepository,
+        OfferSelectionStrategy $selectionStrategy,
         Requirements $requirementsA,
         Requirements $requirementsB,
         Requirements $requirementsC
     ) {
-        $this->beConstructedWith(
-            $offerRepository,
-            self::OFFERS_LIMIT
-        );
+        //Given
+        $abilities = ['some abilities'];
 
-        $this->offerA = $this->createOffer('Company A', $requirementsA);
-        $this->offerB = $this->createOffer('Company B', $requirementsB);
-        $this->offerC = $this->createOffer('Company C', $requirementsC);
+        $offerA = $this->createOffer('Company A', $requirementsA);
+        $offerB = $this->createOffer('Company B', $requirementsB);
+        $offerC = $this->createOffer('Company C', $requirementsC);
 
-        $offerRepository->getOffers(self::OFFERS_LIMIT, 0)->willReturn([$this->offerA, $this->offerB]);
-        $offerRepository->getOffers(self::OFFERS_LIMIT, 2)->willReturn([$this->offerC]);
+        $offerRepository->getOffers(self::OFFERS_LIMIT, 0)->willReturn([$offerA, $offerB]);
+        $offerRepository->getOffers(self::OFFERS_LIMIT, 2)->willReturn([$offerC]);
         $offerRepository->getOffers(self::OFFERS_LIMIT, 4)->willReturn([]);
 
-        $requirementsA->areMet(self::ABILITIES)->willReturn(true);
-        $requirementsB->areMet(self::ABILITIES)->willReturn(false);
-        $requirementsC->areMet(self::ABILITIES)->willReturn(true);
-    }
-
-    public function it_returns_only_matching_offers()
-    {
-        //Given
-        $shouldMatching = true;
+        $selectionStrategy->isSelected($requirementsA, $abilities)->willReturn(true);
+        $selectionStrategy->isSelected($requirementsB, $abilities)->willReturn(false);
+        $selectionStrategy->isSelected($requirementsC, $abilities)->willReturn(true);
 
         //When
-        $result = $this->calculate(self::ABILITIES, $shouldMatching);
+        $result = $this->calculate($abilities);
 
         //Then
-        $result->shouldBe([$this->offerA, $this->offerC]);
-    }
-
-    public function it_returns_only_not_matching_offers()
-    {
-        //Given
-        $shouldMatching = false;
-
-        //When
-        $result = $this->calculate(self::ABILITIES, $shouldMatching);
-
-        //Then
-        $result->shouldBe([$this->offerB]);
+        $result->shouldBe([$offerA, $offerC]);
     }
 
     private function createOffer(string $companyName, Requirements $requirements): Offer

@@ -10,6 +10,8 @@ use JobsBulletin\Domain\Model\Requirements\DisjunctionRequirements;
 use JobsBulletin\Domain\Model\Requirements\NoRequirements;
 use JobsBulletin\Domain\Model\Requirements\SimpleRequirement;
 use JobsBulletin\Domain\Repository\OfferRepository;
+use JobsBulletin\Domain\Service\CalculateMatching\IncompatibleOfferSelectionStrategy;
+use JobsBulletin\Domain\Service\CalculateMatching\MatchingOfferSelectionStrategy;
 use JobsBulletin\Domain\Service\CalculateMatchingOfferService;
 use PHPUnit\Framework\TestCase;
 
@@ -19,8 +21,14 @@ use PHPUnit\Framework\TestCase;
 class CalculateMatchingOfferServiceTest extends TestCase
 {
     private const OFFERS_LIMIT = 10;
+
     private const ABILITY_BIKE = 'a bike';
     private const ABILITY_DRIVING_LICENSE = 'a driving license';
+
+    private const ABILITY = [
+        self::ABILITY_BIKE,
+        self::ABILITY_DRIVING_LICENSE,
+    ];
 
     /**
      * @var CalculateMatchingOfferService
@@ -35,21 +43,19 @@ class CalculateMatchingOfferServiceTest extends TestCase
     public function setUp()
     {
         $this->offerRepository = $this->createOfferRepository();
-        $this->service = new CalculateMatchingOfferService(
-            $this->offerRepository,
-            self::OFFERS_LIMIT);
     }
 
     public function testGetMatchingOffers()
     {
         //Given
-        $ability = [
-            self::ABILITY_BIKE,
-            self::ABILITY_DRIVING_LICENSE,
-        ];
+        $service = new CalculateMatchingOfferService(
+            $this->offerRepository,
+            new MatchingOfferSelectionStrategy(),
+            self::OFFERS_LIMIT
+        );
 
         //When
-        $result = $this->service->calculate($ability, true);
+        $result = $service->calculate(self::ABILITY);
 
         //Then
         $this->assertCount(2, $result);
@@ -60,13 +66,14 @@ class CalculateMatchingOfferServiceTest extends TestCase
     public function testGetDoesNotMatchingOffers()
     {
         //Given
-        $ability = [
-            self::ABILITY_BIKE,
-            self::ABILITY_DRIVING_LICENSE,
-        ];
+        $service = new CalculateMatchingOfferService(
+            $this->offerRepository,
+            new IncompatibleOfferSelectionStrategy(),
+            self::OFFERS_LIMIT
+        );
 
         //When
-        $result = $this->service->calculate($ability, false);
+        $result = $service->calculate(self::ABILITY);
 
         //Then
         $this->assertCount(8, $result);
